@@ -1,4 +1,4 @@
-require("dotenv").config();
+
 const { Client, GatewayIntentBits } = require("discord.js");
 
 const client = new Client({
@@ -10,7 +10,7 @@ const client = new Client({
 });
 
 // Replace with your bot token from Discord Developer Portal
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
+const DISCORD_TOKEN = "MTQxMjQyODEyNzM1NDg4MDE5Mw.GB8Pt4.V40TbSDAC4SwGn7_TaIvzNCuUdcbodkEzHuvqQpip install git-filter-repo";
 
 // Replace with your n8n webhook URL (must be public or tunneled)
 const N8N_WEBHOOK_URL = "https://aiorchestrator.vcollabetiq.com/webhook-test/discord";
