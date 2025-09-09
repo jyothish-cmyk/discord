@@ -10,7 +10,7 @@ const client = new Client({
 });
 
 // Replace with your bot token from Discord Developer Portal
-const DISCORD_TOKEN = "MTQxMjQyODEyNzM1NDg4MDE5Mw.GB8Pt4.V40TbSDAC4SwGn7_TaIvzNCuUdcbodkEzHuvqQpip install git-filter-repo";
+const DISCORD_TOKEN = "MTQxMjQyODEyNzM1NDg4MDE5Mw.GRzk2O.O5CuvgJi8nyiNFcxqMFl3pRpuQaV47iBAL2Cd4";
 
 // Replace with your n8n webhook URL (must be public or tunneled)
 const N8N_WEBHOOK_URL = "https://aiorchestrator.vcollabetiq.com/webhook-test/discord";
