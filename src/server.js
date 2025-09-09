@@ -17,10 +17,10 @@ const client = new Client({
 });
 
 // ⚠️ DO NOT hardcode token in code (security risk)
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
+const DISCORD_TOKEN = "MTQxMjQyODEyNzM1NDg4MDE5Mw.GRzk2O.O5CuvgJi8nyiNFcxqMFl3pRpuQaV47iBAL2Cd4";
 
 // Replace with your n8n webhook URL
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
+const N8N_WEBHOOK_URL = "https://aiorchestrator.vcollabetiq.com/webhook-test/discord";
 
 client.once("ready", (c) => {
   console.log(`✅ Logged in as ${c.user.tag}`);
