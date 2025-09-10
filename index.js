@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, Events } = require("discord.js");
 const express = require("express");
 //const fetch = require("node-fetch"); // add this
 const path = require("path"); // added for favicon
@@ -38,6 +38,7 @@ client.once("ready", (c) => {
   console.log(`✅ Logged in as ${c.user.tag}`);
 });
 
+// 1️⃣ Normal message listener → send to n8n
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return; // ignore bot messages
 
@@ -58,6 +59,26 @@ client.on("messageCreate", async (message) => {
     console.log("➡️ Sent to n8n, status:", res.status);
   } catch (err) {
     console.error("❌ Failed to send to n8n:", err);
+  }
+});
+
+// 2️⃣ Slash command listener
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const command = interaction.commandName;
+
+  if (command === "createcase") {
+    await interaction.reply("✅ Case creation request received. Processing...");
+    // optional: forward to n8n like in messageCreate
+  }
+
+  if (command === "status") {
+    await interaction.reply("ℹ️ Checking status...");
+  }
+
+  if (command === "help") {
+    await interaction.reply("🤖 Available commands: /createcase, /status, /help");
   }
 });
 
