@@ -1,6 +1,6 @@
 const { Client, GatewayIntentBits } = require("discord.js");
 const express = require("express");
-const fetch = require("node-fetch"); // add this
+//const fetch = require("node-fetch"); // add this
 const path = require("path"); // added for favicon
 
 // Create tiny express app so Heroku keeps it alive
