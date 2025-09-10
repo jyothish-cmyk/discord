@@ -4,7 +4,7 @@ const express = require("express");
 // Create tiny express app so Heroku keeps it alive
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.get('/favicon.ico', (req, res) => res.status(204).end());
+app.get("/", (req, res) => res.send(":rocket: Discord bot is running!"));
 app.listen(PORT, () => console.log(`🌐 Server listening on port ${PORT}`));
 
 // Discord client setup
