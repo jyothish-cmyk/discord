@@ -1,12 +1,18 @@
 const { Client, GatewayIntentBits } = require("discord.js");
 const express = require("express");
+const fetch = require("node-fetch"); // add this
 
 // Create tiny express app so Heroku keeps it alive
 const app = express();
 const PORT = process.env.PORT || 5000;
-app.get("/", function (req, res) { 
-  res.send(":rocket: Discord bot is running!"
-          )});
+
+app.get("/", (req, res) => {
+  res.send("🚀 Discord bot is running!");
+});
+
+// Handle favicon.ico (stop H10 crashes)
+app.get("/favicon.ico", (req, res) => res.status(204).end());
+
 app.listen(PORT, () => console.log(`🌐 Server listening on port ${PORT}`));
 
 // Discord client setup
@@ -14,15 +20,16 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
+    GatewayIntentBits.MessageContent,
+  ],
 });
 
-// ⚠️ DO NOT hardcode token in code (security risk)
-const DISCORD_TOKEN = "MTQxMjQyODEyNzM1NDg4MDE5Mw.GRzk2O.O5CuvgJi8nyiNFcxqMFl3pRpuQaV47iBAL2Cd4";
+// ⚠️ Token from env (set this in Heroku dashboard → Settings → Config Vars)
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 
 // Replace with your n8n webhook URL
-const N8N_WEBHOOK_URL = "https://aiorchestrator.vcollabetiq.com/webhook-test/discord";
+const N8N_WEBHOOK_URL =
+  "https://aiorchestrator.vcollabetiq.com/webhook-test/discord";
 
 client.once("ready", (c) => {
   console.log(`✅ Logged in as ${c.user.tag}`);
@@ -41,8 +48,8 @@ client.on("messageCreate", async (message) => {
         username: message.author.username,
         userId: message.author.id,
         channelId: message.channel.id,
-        content: message.content
-      })
+        content: message.content,
+      }),
     });
 
     console.log("➡️ Sent to n8n, status:", res.status);
@@ -50,5 +57,11 @@ client.on("messageCreate", async (message) => {
     console.error("❌ Failed to send to n8n:", err);
   }
 });
+
+// Login bot
+if (!DISCORD_TOKEN) {
+  console.error("❌ DISCORD_TOKEN not set in environment variables");
+  process.exit(1);
+}
 
 client.login(DISCORD_TOKEN);
