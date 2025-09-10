@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits } = require("discord.js");
 const express = require("express");
 const fetch = require("node-fetch"); // add this
+const path = require("path"); // added for favicon
 
 // Create tiny express app so Heroku keeps it alive
 const app = express();
@@ -10,8 +11,10 @@ app.get("/", (req, res) => {
   res.send("🚀 Discord bot is running!");
 });
 
-// Handle favicon.ico (stop H10 crashes)
-app.get("/favicon.ico", (req, res) => res.status(204).end());
+// Handle favicon.ico (serve actual file to avoid H27 logs)
+app.get("/favicon.ico", (req, res) => {
+  res.sendFile(path.join(__dirname, "favicon.ico"));
+});
 
 app.listen(PORT, () => console.log(`🌐 Server listening on port ${PORT}`));
 
