@@ -1,9 +1,10 @@
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, Events } = require("discord.js");
 const express = require("express");
-//const fetch = require("node-fetch"); // add this
-const path = require("path"); // added for favicon
+const path = require("path");
 
-// Create tiny express app so Heroku keeps it alive
+// -----------------------------
+// Express server (Heroku keep alive)
+// -----------------------------
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -18,7 +19,9 @@ app.get("/favicon.ico", (req, res) => {
 
 app.listen(PORT, () => console.log(`🌐 Server listening on port ${PORT}`));
 
+// -----------------------------
 // Discord client setup
+// -----------------------------
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -27,23 +30,49 @@ const client = new Client({
   ],
 });
 
-// ⚠️ Token from env (set this in Heroku dashboard → Settings → Config Vars)
+// ⚠️ Token from env
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-
 // Replace with your n8n webhook URL
 const N8N_WEBHOOK_URL =
   "https://aiorchestrator.vcollabetiq.com/webhook-test/discord";
 
-client.once("ready", (c) => {
+// 🔥 in-memory map to track thread → command
+const threadCommandMap = new Map();
+
+if (!DISCORD_TOKEN) {
+  console.error("❌ DISCORD_TOKEN not set in environment variables");
+  process.exit(1);
+}
+
+client.once("ready", async (c) => {
   console.log(`✅ Logged in as ${c.user.tag}`);
+
+  // 🔥 Restore any active threads to the map on startup
+  const guilds = await client.guilds.fetch();
+  for (const [, guildData] of guilds) {
+    const guild = await guildData.fetch();
+    const channels = await guild.channels.fetchActiveThreads();
+    channels.threads.forEach((thread) => {
+      if (!threadCommandMap.has(thread.id)) {
+        threadCommandMap.set(thread.id, { command: null, userId: null });
+      }
+    });
+  }
 });
 
+// -----------------------------
+// Normal messages -> n8n
+// -----------------------------
 client.on("messageCreate", async (message) => {
-  if (message.author.bot) return; // ignore bot messages
+  if (message.author.bot) return;
 
   console.log(`📩 Message from ${message.author.username}: ${message.content}`);
 
   try {
+    const threadInfo = message.channel.isThread()
+      ? threadCommandMap.get(message.channel.id)
+      : null;
+
     const res = await fetch(N8N_WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -52,6 +81,9 @@ client.on("messageCreate", async (message) => {
         userId: message.author.id,
         channelId: message.channel.id,
         content: message.content,
+        threadId: message.channel.isThread() ? message.channel.id : null,
+        command: threadInfo ? threadInfo.command : null,
+        commandUserId: threadInfo ? threadInfo.userId : null,
       }),
     });
 
@@ -61,10 +93,50 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-// Login bot
-if (!DISCORD_TOKEN) {
-  console.error("❌ DISCORD_TOKEN not set in environment variables");
-  process.exit(1);
-}
+// -----------------------------
+// Slash commands -> n8n
+// -----------------------------
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
 
+  try {
+    const replyMsg = await interaction.reply({
+      content: "✅ Command received! Response will appear in the thread.",
+      fetchReply: true,
+    });
+
+    const thread = await replyMsg.startThread({
+      name: `${interaction.commandName}-${interaction.user.username}`,
+      autoArchiveDuration: 60,
+    });
+
+    console.log(`🧵 Thread created: ${thread.name}`);
+
+    // 🔥 Save mapping of thread → command
+    threadCommandMap.set(thread.id, {
+      command: interaction.commandName,
+      userId: interaction.user.id,
+    });
+
+    await fetch(N8N_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: interaction.commandName,
+        content: interaction.commandName,
+        userId: interaction.user.id,
+        username: interaction.user.username,
+        channelId: interaction.channel.id,
+        messageId: replyMsg.id,
+        threadId: thread.id,
+      }),
+    });
+  } catch (err) {
+    console.error("❌ Error handling slash command:", err);
+  }
+});
+
+// -----------------------------
+// Login bot
+// -----------------------------
 client.login(DISCORD_TOKEN);
