@@ -34,7 +34,7 @@ const client = new Client({
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 // Replace with your n8n webhook URL
 const N8N_WEBHOOK_URL =
-  "https://aiorchestrator.vcollabetiq.com/webhook-test/discord";
+  "https://aiorchestrator.vcollabetiq.com/webhook/discord";
 
 // 🔥 in-memory map to track thread → command
 const threadCommandMap = new Map();
