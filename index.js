@@ -100,6 +100,162 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   try {
+  
+      if (interaction.commandName === "status") {
+
+      const caseNumber = interaction.options.getString("casenumber");
+
+
+
+      const replyMsg = await interaction.reply({
+
+        content: `✅ Checking status for case **${caseNumber}**...`,
+
+        fetchReply: true,
+
+      });
+
+
+
+      const thread = await replyMsg.startThread({
+
+        name: `case-${caseNumber}`,
+
+        autoArchiveDuration: 60,
+
+      });
+
+
+
+      console.log(`🧵 Thread created for case: ${caseNumber}`);
+
+
+
+      threadCommandMap.set(thread.id, {
+
+        command: interaction.commandName,
+
+        userId: interaction.user.id,
+
+        caseNumber,
+
+      });
+
+
+
+      await fetch(N8N_WEBHOOK_URL, {
+
+        method: "POST",
+
+        headers: { "Content-Type": "application/json" },
+
+        body: JSON.stringify({
+
+          command: interaction.commandName,
+
+          content: "CaseNumber - " + caseNumber,
+
+          userId: interaction.user.id,
+
+          username: interaction.user.username,
+
+          channelId: interaction.channel.id,
+
+          messageId: replyMsg.id,
+
+          threadId: thread.id,
+
+        }),
+
+      });
+
+
+
+      return;
+
+    }
+
+
+
+    // ✅ Handle /help separately
+
+    if (interaction.commandName === "help") {
+
+      const query = interaction.options.getString("query");
+
+
+
+      const replyMsg = await interaction.reply({
+
+        content: `✅ Help request received: **${query}**`,
+
+        fetchReply: true,
+
+      });
+
+
+
+      const thread = await replyMsg.startThread({
+
+        name: `help-${interaction.user.username}`,
+
+        autoArchiveDuration: 60,
+
+      });
+
+
+
+      console.log(`🧵 Thread created for help query: ${query}`);
+
+
+
+      threadCommandMap.set(thread.id, {
+
+        command: interaction.commandName,
+
+        userId: interaction.user.id,
+
+        query,
+
+      });
+
+
+
+      //await thread.send(`📩 User query: **${query}**`);
+
+
+
+      await fetch(N8N_WEBHOOK_URL, {
+
+        method: "POST",
+
+        headers: { "Content-Type": "application/json" },
+
+        body: JSON.stringify({
+
+          command: interaction.commandName,
+
+          content: query,
+
+          userId: interaction.user.id,
+
+          username: interaction.user.username,
+
+          channelId: interaction.channel.id,
+
+          messageId: replyMsg.id,
+
+          threadId: thread.id,
+
+        }),
+
+      });
+
+
+
+      return;
+
+    }
     const replyMsg = await interaction.reply({
       content: "✅ Command received! Response will appear in the thread.",
       fetchReply: true,
