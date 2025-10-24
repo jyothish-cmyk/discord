@@ -100,6 +100,53 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   try {
+
+    if (
+      interaction.commandName === "opportunityowner" ||
+      interaction.commandName === "opportunityname" ||
+      interaction.commandName === "accountname"
+    ) {
+      const value =
+        interaction.commandName === "opportunityowner"
+          ? interaction.options.getString("owner")
+          : interaction.commandName === "opportunityname"
+          ? interaction.options.getString("name")
+          : interaction.options.getString("account");
+
+      const replyMsg = await interaction.reply({
+        content: `🔎 Searching Salesforce for ${interaction.commandName} = **${value}** ...`,
+        fetchReply: true,
+      });
+
+      const thread = await replyMsg.startThread({
+        name: `${interaction.commandName}-${interaction.user.username}`,
+        autoArchiveDuration: 60,
+      });
+
+      console.log(`🧵 Thread created for ${interaction.commandName}: ${value}`);
+
+      threadCommandMap.set(thread.id, {
+        command: interaction.commandName,
+        userId: interaction.user.id,
+        value,
+      });
+
+      await fetch(N8N_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          command: interaction.commandName,
+          content: value,
+          userId: interaction.user.id,
+          username: interaction.user.username,
+          channelId: interaction.channel.id,
+          messageId: replyMsg.id,
+          threadId: thread.id,
+        }),
+      });
+
+      return;
+    }
   
       if (interaction.commandName === "status") {
 
